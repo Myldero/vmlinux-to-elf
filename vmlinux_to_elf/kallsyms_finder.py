@@ -11,12 +11,11 @@ from sys import argv, stdout
 import logging
 
 try:
-    from architecture_detecter import guess_architecture, ArchitectureName, architecture_name_to_elf_machine_and_is64bits_and_isbigendian, ArchitectureGuessError
-    from vmlinuz_decompressor import obtain_raw_kernel_from_file
-    
+    from .architecture_detecter import guess_architecture, ArchitectureName, architecture_name_to_elf_machine_and_is64bits_and_isbigendian, arch_nicknames, ArchitectureGuessError
+    from .vmlinuz_decompressor import obtain_raw_kernel_from_file
 except ImportError:
-    from vmlinux_to_elf.architecture_detecter import guess_architecture, ArchitectureName, architecture_name_to_elf_machine_and_is64bits_and_isbigendian, ArchitectureGuessError
-    from vmlinux_to_elf.vmlinuz_decompressor import obtain_raw_kernel_from_file
+    from architecture_detecter import guess_architecture, ArchitectureName, architecture_name_to_elf_machine_and_is64bits_and_isbigendian, arch_nicknames, ArchitectureGuessError
+    from vmlinuz_decompressor import obtain_raw_kernel_from_file
 
 """
     This class will take a raw kernel image (.IMG), and return the file
@@ -223,8 +222,8 @@ class KallsymsFinder:
     def guess_architecture(self, arch: Optional[str]):
         if arch is None:
             self.architecture : ArchitectureName = guess_architecture(self.kernel_img)
-        elif not arch.startswith('_') and hasattr(ArchitectureName, arch):
-            self.architecture = getattr(ArchitectureName, arch)
+        elif arch in arch_nicknames:
+            self.architecture = arch_nicknames[arch]
         else:
             names = ", ".join([i for i in dir(ArchitectureName) if not i.startswith('_')])
             exit("[!] Invalid architecture name. Please choose one of:\n{}".format(names))

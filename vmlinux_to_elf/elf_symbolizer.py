@@ -12,14 +12,11 @@ import logging
 """
 
 try:
-    from kallsyms_finder import KallsymsFinder, KallsymsSymbolType
-
-    from utils.elf import ElfFile, ElfSymtab, ElfRel, Elf32LittleEndianSymbolTableEntry, Elf32BigEndianSymbolTableEntry, Elf64LittleEndianSymbolTableEntry, Elf64BigEndianSymbolTableEntry, SPECIAL_SECTION_INDEX, ST_INFO_TYPE, ST_INFO_BINDING, ElfStrtab, ElfProgbits, ElfNullSection, ElfNoBits, SH_FLAGS
-
+    from .kallsyms_finder import KallsymsFinder, KallsymsSymbolType
+    from .utils.elf import ElfFile, ElfSymtab, ElfRel, Elf32LittleEndianSymbolTableEntry, Elf32BigEndianSymbolTableEntry, Elf64LittleEndianSymbolTableEntry, Elf64BigEndianSymbolTableEntry, SPECIAL_SECTION_INDEX, ST_INFO_TYPE, ST_INFO_BINDING, ElfStrtab, ElfProgbits, ElfNullSection, ElfNoBits, SH_FLAGS
 except ImportError:
-    from vmlinux_to_elf.kallsyms_finder import KallsymsFinder, KallsymsSymbolType
-
-    from vmlinux_to_elf.utils.elf import ElfFile, ElfSymtab, ElfRel, Elf32LittleEndianSymbolTableEntry, Elf32BigEndianSymbolTableEntry, Elf64LittleEndianSymbolTableEntry, Elf64BigEndianSymbolTableEntry, SPECIAL_SECTION_INDEX, ST_INFO_TYPE, ST_INFO_BINDING, ElfStrtab, ElfProgbits, ElfNullSection, ElfNoBits, SH_FLAGS
+    from kallsyms_finder import KallsymsFinder, KallsymsSymbolType
+    from utils.elf import ElfFile, ElfSymtab, ElfRel, Elf32LittleEndianSymbolTableEntry, Elf32BigEndianSymbolTableEntry, Elf64LittleEndianSymbolTableEntry, Elf64BigEndianSymbolTableEntry, SPECIAL_SECTION_INDEX, ST_INFO_TYPE, ST_INFO_BINDING, ElfStrtab, ElfProgbits, ElfNullSection, ElfNoBits, SH_FLAGS
 
 
 class ElfSymbolizer():

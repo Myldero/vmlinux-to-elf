@@ -6,14 +6,13 @@ from sys import argv, stdout
 import logging
 
 try:
+    from .vmlinuz_decompressor import obtain_raw_kernel_from_file
+    from .elf_symbolizer import ElfSymbolizer
+    from .architecture_detecter import ArchitectureGuessError
+except ImportError:
     from vmlinuz_decompressor import obtain_raw_kernel_from_file
     from elf_symbolizer import ElfSymbolizer
     from architecture_detecter import ArchitectureGuessError
-
-except ImportError:
-    from vmlinux_to_elf.vmlinuz_decompressor import obtain_raw_kernel_from_file
-    from vmlinux_to_elf.elf_symbolizer import ElfSymbolizer
-    from vmlinux_to_elf.architecture_detecter import ArchitectureGuessError
 
 def main() -> None:
 

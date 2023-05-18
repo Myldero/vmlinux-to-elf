@@ -17,12 +17,11 @@
 
 
 try:
+    from .vmlinuz_decompressor import obtain_raw_kernel_from_file
+    from .elf_symbolizer import ElfSymbolizer
+except ImportError:
     from vmlinuz_decompressor import obtain_raw_kernel_from_file
     from elf_symbolizer import ElfSymbolizer
-
-except ImportError:
-    from vmlinux_to_elf.vmlinuz_decompressor import obtain_raw_kernel_from_file
-    from vmlinux_to_elf.elf_symbolizer import ElfSymbolizer
 
 from os.path import dirname, realpath, exists
 from traceback import print_exc

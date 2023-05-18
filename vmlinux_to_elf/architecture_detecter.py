@@ -43,6 +43,21 @@ class ArchitectureName(IntEnum):
     sparc = 15
     arcompact = 16
 
+arch_nicknames = {
+    'mipsel': ArchitectureName.mipsle,
+    'mips': ArchitectureName.mipsle,
+    'mips64el': ArchitectureName.mips64le,
+    'mips64': ArchitectureName.mips64le,
+    'i386': ArchitectureName.x86,
+    'x86-64': ArchitectureName.x86_64,
+    'amd64': ArchitectureName.x86_64,
+    'arm': ArchitectureName.armle,
+    'arm64': ArchitectureName.aarch64,
+}
+for i in dir(ArchitectureName):
+    if not i.startswith('_'):
+        arch_nicknames[i] = getattr(ArchitectureName, i)
+
 # Prologues taken from the binwalk file linked above
 architecture_to_prologue_regex : Dict[ArchitectureName, bytes] = {
     ArchitectureName.mipsle: br'.\xFF\xBD\x27..[\xA0-\xBF]\xAF',
