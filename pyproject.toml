@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "vmlinux-to-elf"
+version = "1.0"
+description = "A tool to recover a fully analyzable .ELF from a raw kernel, through extracting the kernel symbol table (kallsyms)"
+authors = ["Marin Moulinier"]
+readme = "README.md"
+homepage = "https://github.com/marin-m/vmlinux-to-elf"
+repository = "https://github.com/marin-m/vmlinux-to-elf"
+classifiers = [
+    'Environment :: Console',
+    'Programming Language :: Python :: 3',
+]
+packages = [
+    { include = "vmlinux_to_elf" }
+]
+
+[tool.poetry.scripts]
+vmlinux-to-elf = 'vmlinux_to_elf.main:main'
+kallsyms-finder = 'vmlinux_to_elf.kallsyms_finder:main'
+
+[tool.poetry.dependencies]
+lz4 = '^4.3'
+zstandard = '^0.20'
+python-lzo = { git = "https://github.com/clubby789/python-lzo.git", rev = "b4e39df" }
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 #-*- encoding: Utf-8 -*-
-from re import search, IGNORECASE
-from argparse import Namespace
+from typing import Optional
 from io import BytesIO
 import logging
 
@@ -26,7 +25,7 @@ except ImportError:
 class ElfSymbolizer():
     
     def __init__(self, file_contents : bytes, output_file : str,
-        elf_machine : int = None, bit_size : int = None,
+        arch : Optional[str] = None,
         base_address : int = None, file_offset : int = None):
         
         if file_contents.startswith(b'\x27\x05\x19\x56'): # uImage header magic (always big-endian)
@@ -41,7 +40,7 @@ class ElfSymbolizer():
         if file_offset:
             file_contents = file_contents[file_offset:]
         
-        kallsyms_finder = KallsymsFinder(file_contents, bit_size)
+        kallsyms_finder = KallsymsFinder(file_contents, arch)
         
         
         if file_contents.startswith(b'\x7fELF'):
@@ -51,13 +50,6 @@ class ElfSymbolizer():
         else:
             
             kernel = ElfFile(kallsyms_finder.is_big_endian, kallsyms_finder.is_64_bits)
-            
-            #  Previsouly the register size was based on the kernel version string:       bool(kallsyms_finder.offset_table_element_size >= 8 or search('itanium|(?:amd|aarch|ia|arm|x86_|\D-)64', kallsyms_finder.version_string, flags = IGNORECASE))
-            
-            if elf_machine is not None:
-                kernel.file_header.e_machine = elf_machine
-            else:
-                kernel.file_header.e_machine = kallsyms_finder.elf_machine
             
             ET_EXEC = 2
             kernel.file_header.e_type = ET_EXEC

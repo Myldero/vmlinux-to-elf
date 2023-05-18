@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #-*- encoding: Utf-8 -*-
-from typing import Dict, Union, Sequence, Set, Tuple, List
+from typing import Dict, Union, Sequence, Set, Tuple, List, Optional
 from re import search, findall, finditer, DOTALL
 from collections import Counter
 from argparse import Namespace
@@ -147,11 +147,11 @@ architecture_name_to_elf_machine_and_is64bits_and_isbigendian : Dict[Architectur
     ArchitectureName.arcompact: (EM_ARCOMPACT, False, False),
 }
 
-"""
-    Guess the architecture based on special knowledge, like custom signatures or binary format
-"""
-def guess_architecture_special(binary : bytes) -> ArchitectureName:
 
+def guess_architecture_special(binary : bytes) -> Optional[ArchitectureName]:
+    """
+    Guess the architecture based on special knowledge, like custom signatures or binary format
+    """
     if binary[:2] == b'MZ':
 
         # Maybe UEFI boot stub ?
@@ -160,11 +160,11 @@ def guess_architecture_special(binary : bytes) -> ArchitectureName:
 
     return None
 
-"""
-    Guess the architecture based on common patterns
-"""
-def guess_architecture_common(binary : bytes) -> ArchitectureName:
 
+def guess_architecture_common(binary : bytes) -> ArchitectureName:
+    """
+    Guess the architecture based on common patterns
+    """
     architecture_to_number_of_prologues :  Dict[ArchitectureName, int] = Counter()
 
     for architecture, prologue in architecture_to_prologue_regex.items():
@@ -175,11 +175,11 @@ def guess_architecture_common(binary : bytes) -> ArchitectureName:
 
     return None if number_of_prologues < 100 else best_architecture_guess
 
-"""
-    Main architecture guess function
-"""
+
 def guess_architecture(binary : bytes) -> ArchitectureName:
-        
+    """
+    Main architecture guess function
+    """
     begin_time = time()
 
     architecture_guess = guess_architecture_special(binary)

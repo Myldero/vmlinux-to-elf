@@ -3,7 +3,7 @@
 
 from re import search, findall, IGNORECASE, match
 from struct import pack, unpack_from
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from argparse import ArgumentParser
 from io import BytesIO
 from enum import Enum
@@ -167,27 +167,17 @@ class KallsymsFinder:
         We'll find kallsyms_token_table and infer the rest
     """
     
-    def __init__(self, kernel_img : bytes, bit_size : int = None):
+    def __init__(self, kernel_img : bytes, arch : Optional[str] = None):
         
         self.kernel_img = kernel_img
         
-        # -
-        
         self.find_linux_kernel_version()
         
-        if not bit_size:
-            self.guess_architecture()
-        elif bit_size not in (64, 32):
-            exit('[!] Please specify a register bit size of either 32 or 64 ' +
-                'bits')
-        else:
-            self.is_64_bits = (bit_size == 64)
+        self.guess_architecture(arch)
 
         if self.is_64_bits:
             self.find_elf64_rela()
             self.apply_elf64_rela()
-        
-        # -
         
         try:
             self.find_kallsyms_token_table()
@@ -230,10 +220,14 @@ class KallsymsFinder:
         #logging.info('[+] Other related strings containing the version number: {0:s}'.format(findall(b'[ -~]*%s[ -~]*' % regex_match.group(1), self.kernel_img)))
         #logging.info('[+] Architecture string: {0:s}'.format(search(b'mod_unload[ -~]+', self.kernel_img).group(0)))
     
-    def guess_architecture(self):
-        
-        self.architecture : ArchitectureName = guess_architecture(self.kernel_img)
-        # self.architecture  =  ArchitectureName.mipsle # DEBUG
+    def guess_architecture(self, arch: Optional[str]):
+        if arch is None:
+            self.architecture : ArchitectureName = guess_architecture(self.kernel_img)
+        elif not arch.startswith('_') and hasattr(ArchitectureName, arch):
+            self.architecture = getattr(ArchitectureName, arch)
+        else:
+            names = ", ".join([i for i in dir(ArchitectureName) if not i.startswith('_')])
+            exit("[!] Invalid architecture name. Please choose one of:\n{}".format(names))
 
         self.elf_machine,  self.is_64_bits,  self.is_big_endian = architecture_name_to_elf_machine_and_is64bits_and_isbigendian[self.architecture]
 
@@ -462,8 +456,6 @@ class KallsymsFinder:
     def find_kallsyms_token_index(self):
         
         # Get to the end of the kallsyms_token_table
-        
-        current_index_in_array = 0
         
         position = self.kallsyms_token_table__offset
         
@@ -1076,10 +1068,8 @@ class KallsymsFinder:
                 symbol_name[0], # The symbol type
                 symbol_name[1:] # The symbol name itself
             ))
-        
-        
-if __name__ == '__main__':
 
+def main() -> None:
     logging.basicConfig(stream=stdout, level=logging.INFO, format='%(message)s')
 
     args = ArgumentParser(description = "Find the kernel's embedded symbol table from a raw " +
@@ -1087,35 +1077,21 @@ if __name__ == '__main__':
         "addresses")
     
     args.add_argument('input_file', help = "Path to the kernel file to extract symbols from")
-    args.add_argument('--bit-size', help = 'Force overriding the input kernel ' +
-        'bit size, providing 32 or 64 bit (rather than auto-detect)', type = int)
-    
+    args.add_argument('--arch', help = 'Skip architecture guessing and force use of given arch')
+
     args = args.parse_args()
 
 
     with open(args.input_file, 'rb') as kernel_bin:
         
         try:
-            kallsyms = KallsymsFinder(obtain_raw_kernel_from_file(kernel_bin.read()), args.bit_size)
+            kallsyms = KallsymsFinder(obtain_raw_kernel_from_file(kernel_bin.read()), args.arch)
         
         except ArchitectureGuessError:
-           exit('[!] The architecture of your kernel could not be guessed ' +
-                'successfully. Please specify the --bit-size argument manually ' +
-                '(use --help for its precise specification).')
+            exit('[!] The architecture of your kernel could not be guessed ' +
+                 'successfully. Please specify the --arch argument manually.')
         
         kallsyms.print_symbols_debug()
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
+if __name__ == '__main__':
+    main()

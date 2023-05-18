@@ -5,7 +5,7 @@ from io import BytesIO, SEEK_END
 from bz2 import BZ2Decompressor
 from gzip import _GzipReader
 from struct import unpack
-from typing import Union
+from typing import Set
 from re import search
 import importlib
 import logging
@@ -267,7 +267,7 @@ def obtain_raw_kernel_from_file(input_file: bytes) -> bytes:
     # last words of the file, as well for
     # the start of the file
     
-    possible_offsets :     Set[int] =         set([0])
+    possible_offsets : Set[int] = {0}
 
     for possible_endianness in '<>':
         possible_offsets |=       set(unpack(possible_endianness + '20I',  input_file[file_size - 4 * 20:]))
@@ -292,7 +292,3 @@ def obtain_raw_kernel_from_file(input_file: bytes) -> bytes:
 
     
     return input_file
-    
-    
-
-
