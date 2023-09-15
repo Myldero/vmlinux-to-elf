@@ -237,7 +237,8 @@ class KallsymsFinder:
             otherwise
         """
 
-        if ArchitectureName.aarch64 != self.architecture:
+        # FIX: architecture is not set when guess_architecture() wasn't called
+        if not hasattr(self, 'architecture') or ArchitectureName.aarch64 != self.architecture:
 
             # I've tested this only for ARM64
             return False
@@ -861,55 +862,62 @@ class KallsymsFinder:
             if likely_has_base_relative else
             [(False, True), (False, False)]
         ):
-            
-            position = self.kallsyms_num_syms__offset
-            
+
             address_byte_size = 8 if likely_is_64_bits else self.offset_table_element_size
             offset_byte_size = min(4, self.offset_table_element_size) # Size of an assembly ".long"
+            self.has_base_relative = has_base_relative
             
-            
-            # Go right after the previous address
-            
-            while True:
-                assert position > 0  # >= self.offset_table_element_size # Needed?
-                
-                previous_word = self.kernel_img[position - address_byte_size:position]
-                
-                if previous_word != address_byte_size * b'\x00':
-                    break
-                position -= address_byte_size
-            
-            if has_base_relative:
-                
-                self.has_base_relative = True
-                
-                position -= address_byte_size
-                
-                # Parse the base_relative value
-                
-                self.relative_base_address :  int  =  int.from_bytes(self.kernel_img[position:position + address_byte_size], 'big' if self.is_big_endian else 'little')
-            
-                # Go right after the previous offset
-                
+
+            if kernel_major > 6 or (kernel_major == 6 and kernel_minor >= 4):
+
+                position = self.kallsyms_token_index__offset + 0x200
+                position += -position % offset_byte_size
+                self.kallsyms_addresses_or_offsets__offset = position
+
+                if has_base_relative:
+                    position += self.num_symbols * offset_byte_size
+                    position += -position % address_byte_size
+                    self.relative_base_address = int.from_bytes(self.kernel_img[position:position+address_byte_size], 'big' if self.is_big_endian else 'little')
+
+            else:
+
+                position = self.kallsyms_num_syms__offset
+
+                # Go right after the previous address
+
                 while True:
                     assert position > 0  # >= self.offset_table_element_size # Needed?
-                    
-                    previous_word = self.kernel_img[position - offset_byte_size:position]
-                    
-                    if previous_word != offset_byte_size * b'\x00':
+
+                    previous_word = self.kernel_img[position - address_byte_size:position]
+
+                    if previous_word != address_byte_size * b'\x00':
                         break
-                    position -= offset_byte_size
-                
-                position -= self.num_symbols * offset_byte_size
-                
-            else:
-                
-                self.has_base_relative = False
-            
-                position -= self.num_symbols * address_byte_size
-            
-            self.kallsyms_addresses_or_offsets__offset = position
-            
+                    position -= address_byte_size
+
+                if has_base_relative:
+
+                    position -= address_byte_size
+
+                    # Parse the base_relative value
+
+                    self.relative_base_address :  int  =  int.from_bytes(self.kernel_img[position:position + address_byte_size], 'big' if self.is_big_endian else 'little')
+
+                    # Go right after the previous offset
+
+                    while True:
+                        assert position > 0  # >= self.offset_table_element_size # Needed?
+
+                        previous_word = self.kernel_img[position - offset_byte_size:position]
+
+                        if previous_word != offset_byte_size * b'\x00':
+                            break
+                        position -= offset_byte_size
+
+                    self.kallsyms_addresses_or_offsets__offset = position - self.num_symbols * offset_byte_size
+                else:
+
+                    self.kallsyms_addresses_or_offsets__offset = position - self.num_symbols * address_byte_size
+
             # Check the obtained values
             
             endianness_marker = '>' if self.is_big_endian else '<'
@@ -957,7 +965,8 @@ class KallsymsFinder:
             
             self.kernel_addresses = tentative_addresses_or_offsets
             
-            break # DEBUG
+            return
+        raise ValueError("Could not find kallsyms_offsets / kallsyms_addresses")
     
     def get_token_table(self) -> list:
         
